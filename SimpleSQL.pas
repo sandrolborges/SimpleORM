@@ -33,6 +33,7 @@ Type
 implementation
 
 uses
+  System.SysUtils,
   SimpleRTTI, System.Generics.Collections;
 
 { TSimpleSQL<T> }
@@ -118,23 +119,23 @@ begin
     .Fields(aFields)
     .TableName(aClassName);
 
-  if FFields <> '' then
+  if length(trim(FFields)) <> 0 then
     aSQL := aSQL + ' SELECT ' + FFields
   else
     aSQL := aSQL + ' SELECT ' + aFields;
 
   aSQL := aSQL + ' FROM ' + aClassName;
 
-  if FJoin <> '' then
+  if length(trim(FJoin)) <> 0 then
     aSQL := aSQL + ' ' + FJoin + ' ';
 
-  if FWhere <> '' then
+  if length(trim(FWhere)) <> 0 then
     aSQL := aSQL + ' WHERE ' + FWhere;
 
-  if FGroupBy <> '' then
-    aSQL := aSQL + ' GROUP BY ' + FGroupBy;  
+  if length(trim(FGroupBy)) <> 0 then
+    aSQL := aSQL + ' GROUP BY ' + FGroupBy;
 
-  if FOrderBy <> '' then
+  if length(trim(FOrderBy)) <> 0 then
     aSQL := aSQL + ' ORDER BY ' + FOrderBy;
 
 end;
@@ -149,7 +150,8 @@ begin
     .Fields(aFields)
     .TableName(aClassName)
     .Where(aWhere);
-  if FWhere <> '' then
+
+  if length(trim(FWhere)) <> 0 then
     aSQL := aSQL + ' WHERE ' + FWhere;
 
   aSQL := aSQL + ' SELECT ' + aFields;
