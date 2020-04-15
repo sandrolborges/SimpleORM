@@ -405,7 +405,7 @@ begin
           typRtti := ctxRtti.GetType(Info);
           for prpRtti in typRtti.GetProperties do
           begin
-            if prpRtti.Name = Field.DisplayName then
+            if LowerCase(prpRtti.Name) = LowerCase(Field.DisplayName) then
             begin
               case prpRtti.PropertyType.TypeKind of
                 tkUnknown: Value := Field.AsString;
@@ -476,7 +476,7 @@ begin
                 vCampo := Campo(Attribute).Name;
             end;
           
-            if vCampo = Field.DisplayName then
+            if LowerCase(vCampo) = LowerCase(Field.DisplayName) then
             begin
               case prpRtti.PropertyType.TypeKind of
                 tkUnknown: Value := Field.AsString;
