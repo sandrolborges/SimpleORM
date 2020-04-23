@@ -37,7 +37,7 @@ type
     procedure SetField(const Value: String);
   public
     constructor Create (aField : String);
-  publishe
+  published
     property Field : String read FField write SetField;
   end;
 
