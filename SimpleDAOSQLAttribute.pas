@@ -16,6 +16,8 @@ Type
     FOrderBy: String;
     FGroupBy: String;
     FJoin : String;
+    FLimitPagePosition : TSimpleDAOLimitPagePosition;
+    FLimitPageSQL : String;
   public
     constructor Create(Parent: iSimpleDAO<T>);
     destructor Destroy; override;
@@ -31,6 +33,10 @@ Type
     function Where: String; overload;
     function OrderBy: String; overload;
     function GroupBy : String; overload;
+    function LimitPagePosition(AValue : TSimpleDAOLimitPagePosition): iSimpleDAOSQLAttribute<T>; overload;
+    function LimitPagePosition: TSimpleDAOLimitPagePosition; overload;
+    function LimitPageSQL(aSQL : String) : iSimpleDAOSQLAttribute<T>; overload;
+    function LimitPageSQL : String; overload;
     function &End: iSimpleDAO<T>;
   end;
 
@@ -80,6 +86,7 @@ begin
   FOrderBy := '';
   FGroupBy := '';
   FJoin := '';
+  FLimitPageSQL := '';
 end;
 
 constructor TSimpleDAOSQLAttribute<T>.Create(Parent: iSimpleDAO<T>);
@@ -128,6 +135,28 @@ end;
 function TSimpleDAOSQLAttribute<T>.Where: String;
 begin
   Result := FWhere;
+end;
+
+function TSimpleDAOSQLAttribute<T>.LimitPagePosition(AValue: TSimpleDAOLimitPagePosition): iSimpleDAOSQLAttribute<T>;
+begin
+  Result := Self;
+  FLimitPagePosition := AValue;
+end;
+
+function TSimpleDAOSQLAttribute<T>.LimitPagePosition: TSimpleDAOLimitPagePosition;
+begin
+  Result := FLimitPagePosition;
+end;
+
+function TSimpleDAOSQLAttribute<T>.LimitPageSQL(aSQL: String): iSimpleDAOSQLAttribute<T>;
+begin
+  Result := Self;
+  FLimitPageSQL := aSQL;
+end;
+
+function TSimpleDAOSQLAttribute<T>.LimitPageSQL: String;
+begin
+  Result := FLimitPageSQL;
 end;
 
 end.

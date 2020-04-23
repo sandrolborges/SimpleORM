@@ -156,6 +156,8 @@ begin
     .Join(FSQLAttribute.Join)
     .Where(FSQLAttribute.Where)
     .OrderBy(FSQLAttribute.OrderBy)
+    .LimitPagePosition(FSQLAttribute.LimitPagePosition)
+    .LimitPageSQL(FSQLAttribute.LimitPageSQL)
     .Select(aSQL);
 
   FQuery.DataSet.DisableControls;
@@ -211,6 +213,8 @@ begin
     .Join(FSQLAttribute.Join)
     .Where(FSQLAttribute.Where)
     .OrderBy(FSQLAttribute.OrderBy)
+    .LimitPagePosition(FSQLAttribute.LimitPagePosition)
+    .LimitPageSQL(FSQLAttribute.LimitPageSQL)
     .Select(aSQL);
 
   FQuery.Open(aSQL);

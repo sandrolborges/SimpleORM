@@ -12,6 +12,8 @@ uses
   {$ENDIF}
   System.SysUtils;
 type
+  TSimpleDAOLimitPagePosition = (lpTop, lpBottom);
+
   iSimpleDAOSQLAttribute<T : class> = interface;
 
   iSimpleDAO<T : class> = interface
@@ -47,6 +49,10 @@ type
     function Where : String; overload;
     function OrderBy : String; overload;
     function GroupBy : String; overload;
+    function LimitPagePosition(AValue : TSimpleDAOLimitPagePosition): iSimpleDAOSQLAttribute<T>; overload;
+    function LimitPagePosition: TSimpleDAOLimitPagePosition; overload;
+    function LimitPageSQL(aSQL : String) : iSimpleDAOSQLAttribute<T>; overload;
+    function LimitPageSQL : String; overload;
     function Clear : iSimpleDAOSQLAttribute<T>;
     function &End : iSimpleDAO<T>;
   end;
@@ -82,6 +88,8 @@ type
     function OrderBy (aSQL : String) : iSimpleSQL<T>;
     function GroupBy (aSQL : String) : iSimpleSQL<T>;
     function Join (aSQL : String) : iSimpleSQL<T>;
+    function LimitPagePosition(AValue : TSimpleDAOLimitPagePosition): iSimpleSQL<T>;
+    function LimitPageSQL(aSQL : String) : iSimpleSQL<T>;
   end;
 
   iSimpleQuery = interface

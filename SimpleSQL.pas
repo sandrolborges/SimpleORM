@@ -14,6 +14,8 @@ Type
       FOrderBy : String;
       FGroupBy : String;
       FJoin : String;
+      FLimitPagePosition : TSimpleDAOLimitPagePosition;
+      FLimitPageSQL : String;
     public
       constructor Create(aInstance : T);
       destructor Destroy; override;
@@ -28,6 +30,9 @@ Type
       function OrderBy (aSQL : String) : iSimpleSQL<T>;
       function GroupBy (aSQL : String) : iSimpleSQL<T>;
       function Join (aSQL : String) : iSimpleSQL<T>;
+      function LimitPagePosition(AValue : TSimpleDAOLimitPagePosition): iSimpleSQL<T>;
+      function LimitPageSQL(aSQL : String) : iSimpleSQL<T>;
+      function &End : iSimpleSQL<T>;
   end;
 
 implementation
@@ -138,6 +143,8 @@ begin
   if length(trim(FOrderBy)) <> 0 then
     aSQL := aSQL + ' ORDER BY ' + FOrderBy;
 
+  if (length(trim(FLimitPageSQL)) <> 0) and (FLimitPagePosition = lpBottom) then
+    aSQL := aSQL + ' ' + FLimitPageSQL;
 end;
 
 function TSimpleSQL<T>.SelectId(var aSQL: String): iSimpleSQL<T>;
@@ -180,6 +187,23 @@ function TSimpleSQL<T>.Where(aSQL: String): iSimpleSQL<T>;
 begin
   Result := Self;
   FWhere := aSQL;
+end;
+
+function TSimpleSQL<T>.LimitPagePosition(AValue: TSimpleDAOLimitPagePosition): iSimpleSQL<T>;
+begin
+  Result := Self;
+  FLimitPagePosition := AValue;
+end;
+
+function TSimpleSQL<T>.LimitPageSQL(aSQL: String): iSimpleSQL<T>;
+begin
+  Result := Self;
+  FLimitPageSQL := aSQL;
+end;
+
+function TSimpleSQL<T>.&End: iSimpleSQL<T>;
+begin
+  Result := Self;
 end;
 
 end.
