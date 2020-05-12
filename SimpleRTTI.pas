@@ -412,7 +412,7 @@ begin
             begin
               if (Attribute is Campo) then
                 vCampo := Campo(Attribute).Name;
-            end;
+            end;
 
             if LowerCase(vCampo) = LowerCase(Field.DisplayName) then
             begin
@@ -483,7 +483,7 @@ begin
             begin
               if (Attribute is Campo) then
                 vCampo := Campo(Attribute).Name;
-            end;
+            end;
 
             if LowerCase(vCampo) = LowerCase(Field.DisplayName) then
             begin
