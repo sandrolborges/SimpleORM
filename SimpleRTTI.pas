@@ -392,6 +392,8 @@ var
   prpRtti   : TRttiProperty;
   Info     : PTypeInfo;
   Value : TValue;
+  Attribute: TCustomAttribute;
+  vCampo: string;
 begin
   Result := Self;
   aDataSet.First;
@@ -405,7 +407,14 @@ begin
           typRtti := ctxRtti.GetType(Info);
           for prpRtti in typRtti.GetProperties do
           begin
-            if LowerCase(prpRtti.Name) = LowerCase(Field.DisplayName) then
+            vCampo  := '';
+            for Attribute in prpRtti.GetAttributes do
+            begin
+              if (Attribute is Campo) then
+                vCampo := Campo(Attribute).Name;
+            end;
+
+            if LowerCase(vCampo) = LowerCase(Field.DisplayName) then
             begin
               case prpRtti.PropertyType.TypeKind of
                 tkUnknown: Value := Field.AsString;
@@ -475,7 +484,7 @@ begin
               if (Attribute is Campo) then
                 vCampo := Campo(Attribute).Name;
             end;
-          
+
             if LowerCase(vCampo) = LowerCase(Field.DisplayName) then
             begin
               case prpRtti.PropertyType.TypeKind of
