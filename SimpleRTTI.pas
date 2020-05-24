@@ -115,7 +115,6 @@ Type
       class function New( aInstance : T ) : iSimpleRTTI<T>;
       function TableName(var aTableName: String): ISimpleRTTI<T>;
 
-      
       function Fields (var aFields : String) : iSimpleRTTI<T>;
       function FieldsInsert (var aFields : String) : iSimpleRTTI<T>;
       function Param (var aParam : String) : iSimpleRTTI<T>;
@@ -392,6 +391,9 @@ var
   prpRtti   : TRttiProperty;
   Info     : PTypeInfo;
   Value : TValue;
+  Attribute: TCustomAttribute;
+  vCampo: string;
+  vIgnore: Boolean;
 begin
   Result := Self;
   aDataSet.First;
@@ -405,33 +407,47 @@ begin
           typRtti := ctxRtti.GetType(Info);
           for prpRtti in typRtti.GetProperties do
           begin
-            if LowerCase(prpRtti.Name) = LowerCase(Field.DisplayName) then
+            vCampo  := '';
+            vIgnore := false;
+            for Attribute in prpRtti.GetAttributes do
             begin
-              case prpRtti.PropertyType.TypeKind of
-                tkUnknown: Value := Field.AsString;
-                tkInteger: Value := Field.AsInteger;
-                tkChar: ;
-                tkEnumeration: ;
-                tkFloat: Value := Field.AsFloat;
-                tkString: Value := Field.AsString;
-                tkSet: ;
-                tkClass: ;
-                tkMethod: ;
-                tkWChar:  Value := Field.AsString;
-                tkLString: Value := Field.AsString;
-                tkWString: Value := Field.AsString;
-                tkVariant: ;
-                tkArray: ;
-                tkRecord: ;
-                tkInterface: ;
-                tkInt64: Value := Field.AsInteger;
-                tkDynArray: ;
-                tkUString: Value := Field.AsString;
-                tkClassRef: ;
-                tkPointer: ;
-                tkProcedure: ;
+              if (Attribute is Campo) then
+                vCampo := Campo(Attribute).Name;
+
+              if Attribute is Ignore then
+                vIgnore := True;
+            end;
+
+            if not vIgnore then
+            begin
+              if LowerCase(vCampo) = LowerCase(Field.DisplayName) then
+              begin
+                case prpRtti.PropertyType.TypeKind of
+                  tkUnknown: Value := Field.AsString;
+                  tkInteger: Value := Field.AsInteger;
+                  tkChar: ;
+                  tkEnumeration: ;
+                  tkFloat: Value := Field.AsFloat;
+                  tkString: Value := Field.AsString;
+                  tkSet: ;
+                  tkClass: ;
+                  tkMethod: ;
+                  tkWChar:  Value := Field.AsString;
+                  tkLString: Value := Field.AsString;
+                  tkWString: Value := Field.AsString;
+                  tkVariant: ;
+                  tkArray: ;
+                  tkRecord: ;
+                  tkInterface: ;
+                  tkInt64: Value := Field.AsInteger;
+                  tkDynArray: ;
+                  tkUString: Value := Field.AsString;
+                  tkClassRef: ;
+                  tkPointer: ;
+                  tkProcedure: ;
+                end;
+                prpRtti.SetValue(Pointer(aEntity), Value);
               end;
-              prpRtti.SetValue(Pointer(aEntity), Value);
             end;
           end;
       end;
@@ -447,7 +463,6 @@ function TSimpleRTTI<T>.DataSetToEntityList(aDataSet: TDataSet;
   var aList: TObjectList<T>): iSimpleRTTI<T>;
 var
   Field : TField;
-  teste: string;
   ctxRtti   : TRttiContext;
   typRtti   : TRttiType;
   prpRtti   : TRttiProperty;
@@ -455,6 +470,7 @@ var
   Value : TValue;
   Attribute: TCustomAttribute;
   vCampo: string;
+  vIgnore: Boolean;
 begin
   Result := Self;
   aList.Clear;
@@ -470,39 +486,46 @@ begin
           for prpRtti in typRtti.GetProperties do
           begin
             vCampo  := '';
+            vIgnore := false;
             for Attribute in prpRtti.GetAttributes do
             begin
               if (Attribute is Campo) then
                 vCampo := Campo(Attribute).Name;
-            end;
-          
-            if LowerCase(vCampo) = LowerCase(Field.DisplayName) then
+
+              if Attribute is Ignore then
+                vIgnore := True;
+            end;
+
+            if not vIgnore then
             begin
-              case prpRtti.PropertyType.TypeKind of
-                tkUnknown: Value := Field.AsString;
-                tkInteger: Value := Field.AsInteger;
-                tkChar: ;
-                tkEnumeration: ;
-                tkFloat: Value := Field.AsFloat;
-                tkString: Value := Field.AsString;
-                tkSet: ;
-                tkClass: ;
-                tkMethod: ;
-                tkWChar:  Value := Field.AsString;
-                tkLString: Value := Field.AsString;
-                tkWString: Value := Field.AsString;
-                tkVariant: ;
-                tkArray: ;
-                tkRecord: ;
-                tkInterface: ;
-                tkInt64: Value := Field.AsInteger;
-                tkDynArray: ;
-                tkUString: Value := Field.AsString;
-                tkClassRef: ;
-                tkPointer: ;
-                tkProcedure: ;
+              if LowerCase(vCampo) = LowerCase(Field.DisplayName) then
+              begin
+                case prpRtti.PropertyType.TypeKind of
+                  tkUnknown: Value := Field.AsString;
+                  tkInteger: Value := Field.AsInteger;
+                  tkChar: ;
+                  tkEnumeration: ;
+                  tkFloat: Value := Field.AsFloat;
+                  tkString: Value := Field.AsString;
+                  tkSet: ;
+                  tkClass: ;
+                  tkMethod: ;
+                  tkWChar:  Value := Field.AsString;
+                  tkLString: Value := Field.AsString;
+                  tkWString: Value := Field.AsString;
+                  tkVariant: ;
+                  tkArray: ;
+                  tkRecord: ;
+                  tkInterface: ;
+                  tkInt64: Value := Field.AsInteger;
+                  tkDynArray: ;
+                  tkUString: Value := Field.AsString;
+                  tkClassRef: ;
+                  tkPointer: ;
+                  tkProcedure: ;
+                end;
+                prpRtti.SetValue(Pointer(aList[Pred(aList.Count)]), Value);
               end;
-              prpRtti.SetValue(Pointer(aList[Pred(aList.Count)]), Value);
             end;
           end;
       end;
@@ -557,7 +580,11 @@ begin
           tkInteger     : aDictionary.Add(vCampo, prpRtti.GetValue(Pointer(FInstance)).AsInteger);
           tkFloat       :
           begin
-            if CompareText('TDateTime',prpRtti.PropertyType.Name)=0 then
+            if (CompareText('TDateTime',prpRtti.PropertyType.Name)=0) or
+              (CompareText('TDate',prpRtti.PropertyType.Name)=0)
+            then
+              aDictionary.Add(vCampo, StrToDateTime(prpRtti.GetValue(Pointer(FInstance)).ToString))
+            else if CompareText('TDateTime',prpRtti.PropertyType.Name)=0 then
               aDictionary.Add(vCampo, StrToDateTime(prpRtti.GetValue(Pointer(FInstance)).ToString))
             else
               aDictionary.Add(vCampo, __FloatFormat(prpRtti.GetValue(Pointer(FInstance)).ToString));
