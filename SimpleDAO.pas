@@ -162,7 +162,9 @@ begin
 
   FQuery.DataSet.DisableControls;
   FQuery.Open(aSQL);
+  {$IFNDEF CONSOLE}
   TSimpleRTTI<T>.New(nil).DataSetToEntityList(FQuery.DataSet, FList);
+  {$ENDIF}
   FSQLAttribute.Clear;
   FQuery.DataSet.EnableControls;
 end;
