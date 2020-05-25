@@ -584,8 +584,6 @@ begin
               (CompareText('TDate',prpRtti.PropertyType.Name)=0)
             then
               aDictionary.Add(vCampo, StrToDateTime(prpRtti.GetValue(Pointer(FInstance)).ToString))
-            else if CompareText('TDateTime',prpRtti.PropertyType.Name)=0 then
-              aDictionary.Add(vCampo, StrToDateTime(prpRtti.GetValue(Pointer(FInstance)).ToString))
             else
               aDictionary.Add(vCampo, __FloatFormat(prpRtti.GetValue(Pointer(FInstance)).ToString));
           end;
@@ -806,11 +804,12 @@ end;
 
 function TSimpleRTTI<T>.Where (var aWhere : String) : iSimpleRTTI<T>;
 var
-  ctxRtti   : TRttiContext;
-  typRtti   : TRttiType;
-  prpRtti   : TRttiProperty;
+  ctxRtti  : TRttiContext;
+  typRtti  : TRttiType;
+  prpRtti  : TRttiProperty;
   Info     : PTypeInfo;
   Attribute: TCustomAttribute;
+  vCampo   : String;
 begin
   Result := Self;
   Info := System.TypeInfo(T);
@@ -819,10 +818,14 @@ begin
     typRtti := ctxRtti.GetType(Info);
     for prpRtti in typRtti.GetProperties do
     begin
+      vCampo := '';
       for Attribute in prpRtti.GetAttributes do
       begin
+        if Attribute is campo then
+         vCampo := Campo(Attribute).Name;
+
         if Attribute is PK then
-          aWhere := aWhere + prpRtti.Name + ' = :' + prpRtti.Name + ' AND ';
+          aWhere := aWhere + vCampo + ' = :' + prpRtti.Name + ' AND ';
       end;
     end;
   finally
