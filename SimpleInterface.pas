@@ -68,6 +68,7 @@ type
     function Where (var aWhere : String) : iSimpleRTTI<T>;
     function Fields (var aFields : String) : iSimpleRTTI<T>;
     function FieldsInsert (var aFields : String) : iSimpleRTTI<T>;
+    function Joins (var aJoins : String) : iSimpleRTTI<T>;
     function Param (var aParam : String) : iSimpleRTTI<T>;
     function DataSetToEntityList (aDataSet : TDataSet; var aList : TObjectList<T>) : iSimpleRTTI<T>;
     function DataSetToEntity (aDataSet : TDataSet; var aEntity : T) : iSimpleRTTI<T>;
