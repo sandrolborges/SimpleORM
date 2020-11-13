@@ -117,10 +117,9 @@ Type
       destructor Destroy; override;
       class function New( aInstance : T ) : iSimpleRTTI<T>;
       function TableName(var aTableName: String): ISimpleRTTI<T>;
-
-      
       function Fields (var aFields : String) : iSimpleRTTI<T>;
       function FieldsInsert (var aFields : String) : iSimpleRTTI<T>;
+      function Joins (var aJoins : String) : iSimpleRTTI<T>;
       function Param (var aParam : String) : iSimpleRTTI<T>;
       function Where (var aWhere : String) : iSimpleRTTI<T>;
       function Update(var aUpdate : String) : iSimpleRTTI<T>;
@@ -138,12 +137,13 @@ Type
 implementation
 
 uses
+  System.SysUtils,
+  System.StrUtils,
   SimpleAttributes,
   {$IFNDEF CONSOLE}
   Vcl.ComCtrls,
-  Vcl.Graphics,
   {$ENDIF}
-  Variants,
+  Variants;
   SimpleRTTIHelper,
   System.UITypes;
 
@@ -192,7 +192,7 @@ begin
         or (aValue.TypeInfo = TypeInfo(TDateTime)) then
         aProperty.SetValue(Pointer(aEntity), StrToDateTime(aValue.ToString))
       else
-        aProperty.SetValue(Pointer(aEntity), StrToFloat(aValue.ToString));
+        aProperty.SetValue(Pointer(aEntity), StrToFloat(aValue.ToString));      end;
     end;
     tkSet: ;
     tkClass: ;
@@ -556,16 +556,35 @@ var
   typRtti   : TRttiType;
   prpRtti   : TRttiProperty;
   Info     : PTypeInfo;
+  Attribute: TCustomAttribute;
+  vMainTableName, vCampo: string;
 begin
   Result := Self;
   Info := System.TypeInfo(T);
   ctxRtti := TRttiContext.Create;
   try
+    self.TableName(vMainTableName);
     typRtti := ctxRtti.GetType(Info);
     for prpRtti in typRtti.GetProperties do
     begin
-      if not prpRtti.IsIgnore then
-        aFields := aFields + prpRtti.FieldName + ', ';
+      for Attribute in prpRtti.GetAttributes do
+      begin
+		if not prpRtti.IsIgnore then
+		begin
+	      if (Attribute is Campo) then
+	        vCampo := concat(vMainTableName, '.', Campo(Attribute).Name);
+
+	      if (Attribute is FK) then
+	      begin
+	        vCampo := concat(
+	          ifthen(
+	            String.IsNullOrWhiteSpace(FK(Attribute).Alias),
+	            FK(Attribute).RefTableName,
+	            FK(Attribute).Alias
+	          ), '.', FK(Attribute).RefColumnNameSelect);
+	      end;
+		  aFields := aFields + prpRtti.FieldName + ', ';
+		end;
     end;
   finally
     aFields := Copy(aFields, 0, Length(aFields) - 2) + ' ';
@@ -598,6 +617,72 @@ begin
   finally
     aFields := Copy(aFields, 0, Length(aFields) - 2) + ' ';
     ctxRtti.Free;
+  end;
+end;
+
+function TSimpleRTTI<T>.Joins(var aJoins: String): iSimpleRTTI<T>;
+var
+  ctxRtti   : TRttiContext;
+  typRtti   : TRttiType;
+  prpRtti   : TRttiProperty;
+  Info     : PTypeInfo;
+  Attribute: TCustomAttribute;
+  vListaJoins: TDictionary<String, String>;
+  vMainTableName, vJoinTableAlias, vJoinLocalColumn, vJoinForeingColumn: String;
+  vColumnName, vRefTableName, vRefColumnName, vTypeJoin, vAlias: string;
+begin
+  Result := Self;
+  Info := System.TypeInfo(T);
+  vListaJoins := TDictionary<String, String>.Create;
+  ctxRtti := TRttiContext.Create;
+  try
+    aJoins := EmptyStr;
+    typRtti := ctxRtti.GetType(Info);
+    for prpRtti in typRtti.GetProperties do
+    begin
+      for Attribute in prpRtti.GetAttributes do
+      begin
+        if (Attribute is fk) then
+        begin
+          vColumnName := FK(Attribute).ColumnName;
+          vRefTableName := FK(Attribute).RefTableName;
+          vRefColumnName := FK(Attribute).RefColumnName;
+          case FK(Attribute).Join of
+            InnerJoin: vTypeJoin := 'INNER';
+            LeftJoin: vTypeJoin := 'LEFT';
+            RightJoin: vTypeJoin := 'RIGHT';
+            FullJoin: vTypeJoin := 'FULL';
+          end;
+          vAlias := FK(Attribute).Alias;
+
+          if String.IsNullOrWhiteSpace(vAlias) then
+            vJoinTableAlias := vRefTableName;
+
+          if not vListaJoins.ContainsKey(vJoinTableAlias) then
+          begin
+            vListaJoins.Add(vJoinTableAlias, concat(vTypeJoin, ';', vRefTableName, ';', vAlias, ';',
+              vRefColumnName, ';', vColumnName));
+
+            aJoins := aJoins + ' ' + vTypeJoin + ' JOIN ' + vRefTableName;
+            if String.Compare(vRefTableName, vJoinTableAlias) <> 0 then
+              aJoins := aJoins + ' AS ' + vJoinTableAlias;
+
+            if not vColumnName.Contains('.') then
+            begin
+              self.TableName(vMainTableName);
+              vJoinLocalColumn := vMainTableName + '.' + vColumnName;
+            end;
+
+            vJoinForeingColumn := vJoinTableAlias + '.' + vRefColumnName;
+
+            aJoins := aJoins + ' ON (' + vJoinForeingColumn + ' = ' + vJoinLocalColumn + ')';
+          end;
+        end;
+      end;
+    end;
+  finally
+    ctxRtti.Free;
+    vListaJoins.Free;
   end;
 end;
 
@@ -657,7 +742,6 @@ begin
     ctxRtti.Free;
   end;
 end;
-
 function TSimpleRTTI<T>.TableName(var aTableName: String): ISimpleRTTI<T>;
 var
   vInfo   : PTypeInfo;

@@ -116,12 +116,13 @@ end;
 
 function TSimpleSQL<T>.Select (var aSQL : String) : iSimpleSQL<T>;
 var
-  aFields, aClassName : String;
+  aFields, aJoins, aClassName : String;
 begin
   Result := Self;
 
   TSimpleRTTI<T>.New(nil)
     .Fields(aFields)
+    .Joins(aJoins)
     .TableName(aClassName);
 
   if length(trim(FFields)) <> 0 then
@@ -132,7 +133,9 @@ begin
   aSQL := aSQL + ' FROM ' + aClassName;
 
   if length(trim(FJoin)) <> 0 then
-    aSQL := aSQL + ' ' + FJoin + ' ';
+    aSQL := aSQL + ' ' + FJoin + ' '
+  else
+    aSQL := aSQL + ' ' + aJoins + ' ';
 
   if length(trim(FWhere)) <> 0 then
     aSQL := aSQL + ' WHERE ' + FWhere;
