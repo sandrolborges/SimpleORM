@@ -162,24 +162,24 @@ begin
     .LimitPageSQL(FSQLAttribute.LimitPageSQL)
     .Select(aSQL);
 
-  FQuery.DataSet.DisableControls;
+//  FQuery.DataSet.DisableControls;
   FQuery.Open(aSQL);
-  TSimpleRTTI<T>.New(nil).DataSetToEntityList(FQuery.DataSet, FList);
+//  TSimpleRTTI<T>.New(nil).DataSetToEntityList(FQuery.DataSet, FList);
   FSQLAttribute.Clear;
-  FQuery.DataSet.EnableControls;
+//  FQuery.DataSet.EnableControls;
 end;
 
 function TSimpleDAO<T>.Find(aId: Integer): T;
 var
   aSQL : String;
 begin
-      Result := T.Create;
-      TSimpleSQL<T>.New(nil).SelectId(aSQL);
-      FQuery.SQL.Clear;
-      FQuery.SQL.Add(aSQL);
-      Self.FillParameter(Result, aId);
-      FQuery.Open;
-      TSimpleRTTI<T>.New(nil).DataSetToEntity(FQuery.DataSet, Result);
+  Result := T.Create;
+  TSimpleSQL<T>.New(nil).SelectId(aSQL);
+  FQuery.SQL.Clear;
+  FQuery.SQL.Add(aSQL);
+  Self.FillParameter(Result, aId);
+  FQuery.Open;
+  TSimpleRTTI<T>.New(nil).DataSetToEntity(FQuery.DataSet, Result);
 end;
 
 {$IFNDEF CONSOLE}
@@ -201,7 +201,6 @@ begin
     FreeAndNil(Entity);
   end;
 end;
-
 {$ENDIF}
 
 function TSimpleDAO<T>.LastID: iSimpleDAO<T>;
