@@ -94,7 +94,8 @@ uses
   Vcl.ExtCtrls,
   {$ENDIF}
   System.Classes,
-  System.SysUtils;
+  System.SysUtils,
+  System.StrUtils;
 
 Type
   ESimpleRTTI = Exception;
@@ -137,13 +138,11 @@ Type
 implementation
 
 uses
-  System.SysUtils,
-  System.StrUtils,
   SimpleAttributes,
   {$IFNDEF CONSOLE}
   Vcl.ComCtrls,
   {$ENDIF}
-  Variants;
+  Variants,
   SimpleRTTIHelper,
   System.UITypes;
 
@@ -192,7 +191,7 @@ begin
         or (aValue.TypeInfo = TypeInfo(TDateTime)) then
         aProperty.SetValue(Pointer(aEntity), StrToDateTime(aValue.ToString))
       else
-        aProperty.SetValue(Pointer(aEntity), StrToFloat(aValue.ToString));      end;
+        aProperty.SetValue(Pointer(aEntity), StrToFloat(aValue.ToString));
     end;
     tkSet: ;
     tkClass: ;
@@ -569,22 +568,23 @@ begin
     begin
       for Attribute in prpRtti.GetAttributes do
       begin
-		if not prpRtti.IsIgnore then
-		begin
-	      if (Attribute is Campo) then
-	        vCampo := concat(vMainTableName, '.', Campo(Attribute).Name);
+        if not prpRtti.IsIgnore then
+        begin
+            if (Attribute is Campo) then
+              vCampo := concat(vMainTableName, '.', Campo(Attribute).Name);
 
-	      if (Attribute is FK) then
-	      begin
-	        vCampo := concat(
-	          ifthen(
-	            String.IsNullOrWhiteSpace(FK(Attribute).Alias),
-	            FK(Attribute).RefTableName,
-	            FK(Attribute).Alias
-	          ), '.', FK(Attribute).RefColumnNameSelect);
-	      end;
-		  aFields := aFields + prpRtti.FieldName + ', ';
-		end;
+            if (Attribute is FK) then
+            begin
+              vCampo := concat(
+                ifthen(
+                  String.IsNullOrWhiteSpace(FK(Attribute).Alias),
+                  FK(Attribute).RefTableName,
+                  FK(Attribute).Alias
+                ), '.', FK(Attribute).RefColumnNameSelect);
+            end;
+          aFields := aFields + prpRtti.FieldName + ', ';
+        end;
+      end;
     end;
   finally
     aFields := Copy(aFields, 0, Length(aFields) - 2) + ' ';
