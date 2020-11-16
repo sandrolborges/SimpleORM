@@ -49,11 +49,14 @@ type
 
   NotNull = class(TCustomAttribute)
   end;
-	
+
   Ignore = class(TCustomAttribute)
   end;
 
   AutoInc = class(TCustomAttribute)
+  end;
+
+  NumberOnly = class(TCustomAttribute)
   end;
 
   Bind = class(TCustomAttribute)
@@ -65,16 +68,8 @@ type
   published
     property Field : String read FField write SetField;
   end;
-	
-	Display = class(TCustomAttribute)
-  private
-    FName: string;
-  public
-    constructor Create(const aName: string);
-    property Name: string read FName write FName;
-  end;
 
-  Format = class(TCustomAttribute)
+ Format = class(TCustomAttribute)
   private
     FMaxSize: integer;
     FPrecision: integer;
@@ -91,6 +86,14 @@ type
     constructor Create(const aRange: array of Integer); overload;
   end;
 
+  Display = class(TCustomAttribute)
+  private
+    FName: string;
+  public
+    constructor Create(const aName: string);
+    property Name: string read FName write FName;
+  end;
+
   Relationship = class abstract(TCustomAttribute)
   private
     FEntityName: string;
@@ -104,12 +107,12 @@ type
 
   BelongsTo = class(Relationship)
   end;
-  
+
   HasMany = class(Relationship)
   end;
 
   BelongsToMany = class(Relationship)
-  end;	
+  end;
 
 implementation
 
