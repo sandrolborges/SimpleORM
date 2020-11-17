@@ -511,7 +511,7 @@ begin
       case prpRtti.PropertyType.TypeKind of
         tkInteger, tkInt64:
           begin
-            if prpRtti.EhChaveEstrangeira then
+            if prpRtti.EhChaveEstrangeira or prpRtti.Tem<SaveNull> then
             begin
               if prpRtti.GetValue(Pointer(FInstance)).AsInteger = 0 then
                 aDictionary.Add(prpRtti.FieldName, Null)
@@ -551,9 +551,9 @@ end;
 
 function TSimpleRTTI<T>.Fields (var aFields : String) : iSimpleRTTI<T>;
 var
-  ctxRtti   : TRttiContext;
-  typRtti   : TRttiType;
-  prpRtti   : TRttiProperty;
+  ctxRtti  : TRttiContext;
+  typRtti  : TRttiType;
+  prpRtti  : TRttiProperty;
   Info     : PTypeInfo;
   Attribute: TCustomAttribute;
   vMainTableName, vCampo: string;
@@ -566,26 +566,31 @@ begin
     typRtti := ctxRtti.GetType(Info);
     for prpRtti in typRtti.GetProperties do
     begin
-      for Attribute in prpRtti.GetAttributes do
-      begin
-        if not prpRtti.IsIgnore then
-        begin
-            if (Attribute is Campo) then
-              vCampo := concat(vMainTableName, '.', Campo(Attribute).Name);
+//      for Attribute in prpRtti.GetAttributes do
+//      begin
+        vCampo := EmptyStr;
 
-            if (Attribute is FK) then
-            begin
-              vCampo := concat(
-                ifthen(
-                  String.IsNullOrWhiteSpace(FK(Attribute).Alias),
-                  FK(Attribute).RefTableName,
-                  FK(Attribute).Alias
-                ), '.', FK(Attribute).RefColumnNameSelect);
-            end;
-          aFields := aFields + prpRtti.FieldName + ', ';
+        if prpRtti.IsIgnore then
+            Continue;
+
+        if prpRtti.EhCampo then
+          vCampo := concat(vMainTableName, '.', prpRtti.FieldName);
+
+        Attribute := prpRtti.GetAttribute<FK>;
+        if Attribute <> nil then
+        begin
+          vCampo := concat(
+            ifthen(
+              String.IsNullOrWhiteSpace(FK(Attribute).Alias),
+              FK(Attribute).RefTableName,
+              FK(Attribute).Alias
+            ), '.', FK(Attribute).RefColumnNameSelect);
         end;
+
+        if not String.IsNullOrWhiteSpace(vCampo) then
+          aFields := aFields + vCampo + ', ';
       end;
-    end;
+//    end;
   finally
     aFields := Copy(aFields, 0, Length(aFields) - 2) + ' ';
     ctxRtti.Free;
@@ -762,9 +767,9 @@ end;
 
 function TSimpleRTTI<T>.Update(var aUpdate : String) : iSimpleRTTI<T>;
 var
-  ctxRtti   : TRttiContext;
-  typRtti   : TRttiType;
-  prpRtti   : TRttiProperty;
+  ctxRtti  : TRttiContext;
+  typRtti  : TRttiType;
+  prpRtti  : TRttiProperty;
   Info     : PTypeInfo;
 begin
   Result := Self;
@@ -779,6 +784,23 @@ begin
 
       if prpRtti.IsAutoInc then
         Continue;
+
+      if prpRtti.Tem<SaveNull> then
+      begin
+        case prpRtti.PropertyType.TypeKind of
+          tkUnknown: ;
+          tkInteger, tkFloat, tkInt64:
+          begin
+            if prpRtti.GetValue(Pointer(FInstance)).AsInteger = 0 then
+              Continue;
+          end;
+          tkChar, tkString, tkWChar, tkLString, tkWString, tkUString:
+          begin
+            if String.IsNullOrWhiteSpace(prpRtti.GetValue(Pointer(FInstance)).AsString) then
+              Continue;
+          end;
+        end;
+      end;
 
       aUpdate := aUpdate + prpRtti.FieldName + ' = :' + prpRtti.FieldName + ', ';
     end;
