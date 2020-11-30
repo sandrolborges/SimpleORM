@@ -50,6 +50,9 @@ type
   NotNull = class(TCustomAttribute)
   end;
 
+  SaveNull = class(TCustomAttribute)
+  end;
+
   Ignore = class(TCustomAttribute)
   end;
 
