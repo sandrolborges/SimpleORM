@@ -9,9 +9,14 @@ uses
   System.Classes,
   Data.DB,
   {$IFNDEF CONSOLE}
-  VCL.Forms,
+    {$IFDEF FMX}
+      FMX.Forms,
+    {$ELSE}
+      Vcl.Forms,
+    {$ENDIF}
   {$ENDIF}
-  SimpleDAOSQLAttribute;
+  SimpleDAOSQLAttribute,
+  System.Threading;
 
 Type
   TSimpleDAO<T: class, constructor> = class(TInterfacedObject, iSimpleDAO<T>)
@@ -35,6 +40,7 @@ Type
       function Update(aValue : T) : iSimpleDAO<T>; overload;
       function Delete(aValue : T) : iSimpleDAO<T>; overload;
       function Delete(aField : String; aValue : String) : iSimpleDAO<T>; overload;
+      function LastID : iSimpleDAO<T>;
       {$IFNDEF CONSOLE}
       function Insert: iSimpleDAO<T>; overload;
       function Update : iSimpleDAO<T>; overload;
@@ -160,13 +166,11 @@ begin
     .LimitPageSQL(FSQLAttribute.LimitPageSQL)
     .Select(aSQL);
 
-  FQuery.DataSet.DisableControls;
+//  FQuery.DataSet.DisableControls;
   FQuery.Open(aSQL);
-  {$IFNDEF CONSOLE}
-  TSimpleRTTI<T>.New(nil).DataSetToEntityList(FQuery.DataSet, FList);
-  {$ENDIF}
+//  TSimpleRTTI<T>.New(nil).DataSetToEntityList(FQuery.DataSet, FList);
   FSQLAttribute.Clear;
-  FQuery.DataSet.EnableControls;
+//  FQuery.DataSet.EnableControls;
 end;
 
 function TSimpleDAO<T>.Find(aId: Integer): T;
@@ -202,6 +206,12 @@ begin
   end;
 end;
 {$ENDIF}
+
+function TSimpleDAO<T>.LastID: iSimpleDAO<T>;
+begin
+  Result := Self;
+  FQuery.Open('SELECT LAST_INSERT_ID() as ID');
+end;
 
 function TSimpleDAO<T>.Find(var aList: TObjectList<T>): iSimpleDAO<T>;
 var
@@ -296,9 +306,10 @@ end;
 
 function TSimpleDAO<T>.FillParameter(aInstance: T): iSimpleDAO<T>;
 var
-  Key : String;
+  Key, ValorStr : String;
   DictionaryFields : TDictionary<String, Variant>;
   P : TParams;
+  Valor: Variant;
 begin
   DictionaryFields := TDictionary<String, Variant>.Create;
   TSimpleRTTI<T>.New(aInstance).DictionaryFields(DictionaryFields);
@@ -306,7 +317,17 @@ begin
     for Key in DictionaryFields.Keys do
     begin
       if FQuery.Params.FindParam(Key) <> nil then
+      begin
+        Valor := DictionaryFields.Items[Key];
+        case TVarData(DictionaryFields.Items[Key]).VType of
+          varString, varUString:
+          begin
+            ValorStr := Valor;
+            FQuery.Params.ParamByName(Key).Size := TEncoding.UTF8.GetByteCount(ValorStr);
+          end;
+        end;
         FQuery.Params.ParamByName(Key).Value := DictionaryFields.Items[Key];
+      end;
     end;
   finally
     FreeAndNil(DictionaryFields);
