@@ -9,7 +9,11 @@ uses
   System.Classes,
   Data.DB,
   {$IFNDEF CONSOLE}
-  VCL.Forms,
+    {$IFDEF FMX}
+      FMX.Forms,
+    {$ELSE}
+      Vcl.Forms,
+    {$ENDIF}
   {$ENDIF}
   SimpleDAOSQLAttribute,
   System.Threading;
@@ -302,9 +306,10 @@ end;
 
 function TSimpleDAO<T>.FillParameter(aInstance: T): iSimpleDAO<T>;
 var
-  Key : String;
+  Key, ValorStr : String;
   DictionaryFields : TDictionary<String, Variant>;
   P : TParams;
+  Valor: Variant;
 begin
   DictionaryFields := TDictionary<String, Variant>.Create;
   TSimpleRTTI<T>.New(aInstance).DictionaryFields(DictionaryFields);
@@ -312,7 +317,17 @@ begin
     for Key in DictionaryFields.Keys do
     begin
       if FQuery.Params.FindParam(Key) <> nil then
+      begin
+        Valor := DictionaryFields.Items[Key];
+        case TVarData(DictionaryFields.Items[Key]).VType of
+          varString, varUString:
+          begin
+            ValorStr := Valor;
+            FQuery.Params.ParamByName(Key).Size := TEncoding.UTF8.GetByteCount(ValorStr);
+          end;
+        end;
         FQuery.Params.ParamByName(Key).Value := DictionaryFields.Items[Key];
+      end;
     end;
   finally
     FreeAndNil(DictionaryFields);
